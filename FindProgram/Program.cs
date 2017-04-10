@@ -18,6 +18,8 @@ namespace FindProgram
         {
             Console.WriteLine("Program start");
             List<FileInfo> fileInfoList = FileFind.Find("C:\\Users\\miniARVES\\Documents\\Cloud\\Учёба\\4 семестр\\ООП\\Задачи\\FindLibrary", "*", "cs").Result;
+            //А можно было написать await перед FileFind.Find. Тогда c# понял бы, что это асинхронная функция, и занялся бы другими делами, пока не вернется результат
+            //Но заниматься ему нечем, и мы сразу обращаемся к .Result, и синхронно ждем результата.
             foreach (FileInfo fileInfo in fileInfoList)
             {
                 Console.WriteLine(fileInfo.FullName);
