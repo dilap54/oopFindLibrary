@@ -26,7 +26,7 @@ namespace FindLibrary
          * */
         class FinderWorker
         {
-            Action<bool, List<FileInfo>> callback;//Метод, выполняемый по окончанию задания
+            TaskCompletionSource<List<FileInfo>> task;//Метод, выполняемый по окончанию задания
 
             int remainCount;//Количество невыполненных заданий (нужно для отслеживания, во всех ли файлах работник искал подстроку)
 
@@ -36,9 +36,9 @@ namespace FindLibrary
 
             string searchString;//Искомая подстрока
 
-            public FinderWorker(FileInfo[] fileInfoArr, string searchString, Action<bool, List<FileInfo>> callback)
+            public FinderWorker(FileInfo[] fileInfoArr, string searchString, TaskCompletionSource<List<FileInfo>> task)
             {
-                this.callback = callback;
+                this.task = task;
                 this.fileInfoArr = fileInfoArr;
                 remainCount = fileInfoArr.Length;//Количество невыполненных задач = количество полученных для поиска файлов
                 this.searchString = searchString;
@@ -89,7 +89,8 @@ namespace FindLibrary
                 Interlocked.Decrement(ref remainCount);//Уменьшить количество невыполненных заданий
                 if (remainCount <= 0){//Если все выполнено
                     //Вызывает callback с результатом. 
-                    callback(false, Result.ToList<FileInfo>());//false - потому что нет ошибки, Result.ToList() - преобразовывает ConcurrentBag в обычный List
+                    //callback(false, Result.ToList<FileInfo>());//false - потому что нет ошибки, Result.ToList() - преобразовывает ConcurrentBag в обычный List
+                    task.SetResult(Result.ToList<FileInfo>());
                     //Воркер закончил работу, дальше 
                 }
             }
@@ -119,9 +120,12 @@ namespace FindLibrary
                 FinderWorker finderWorker = new FinderWorker(
                     fileInfoArr,//Список файлов для поиска в них подстроки
                     searchString,//Подстрока
+                    /*
                     (bool err, List<FileInfo> result) => {//Callback, вызываемый по завершению поиска файлов. первый параметр err, потому что так правильней, хоть здесь можно и без него.
                         task.SetResult(result);//Установить результат в управляемый task, чтобы c# знал, что асинхронный код завершил работу
                     }
+                    */
+                    task
                 );
 
                 //Установить в ThreadPool максимальное количество потоков равное количеству ядер процессора
